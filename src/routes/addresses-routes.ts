@@ -1,14 +1,16 @@
 import {Request, Response, Router} from "express";
+import {addressesRepository} from "../repositories/addresses-repository";
 
-const addresses = [{id: 1, value: 'nemiga str'}, {id: 2, value: '8March'}]
 
-export const addressesRouter=Router({})
+export const addressesRouter = Router({})
 
 addressesRouter.get('/', (req: Request, res: Response) => {
-    res.send(addresses)
+
+    const foundProducts = addressesRepository.findProducts(req.query.address ? req.query.address.toString() : null)
+    res.send(foundProducts)
 })
 addressesRouter.get('/:id', (req: Request, res: Response) => {
-    const address = addresses.find(p => p.id === +req.params.id)
+    const address = addressesRepository.getCurrentAddress(req.params.id)
     if (address) {
         res.send(address)
     } else {
@@ -17,34 +19,26 @@ addressesRouter.get('/:id', (req: Request, res: Response) => {
 })
 //delete
 addressesRouter.delete('/:id', (req: Request, res: Response) => {
+    const remove = addressesRepository.removeAddress(req.params.id)
+    if (remove === '1') {
 
-    for (let i = 0; i < addresses.length; i++) {
-        if (addresses[i].id === +req.params.id) {
-            addresses.splice(i, 1);
-            res.send(204);
-            return;
-        }
+        res.send(204)
+    } else res.send(404)
 
-    }
-
-
-    res.send(404)
 
 })
 
 //post
 addressesRouter.post('/', (req: Request, res: Response) => {
-    const newAddress={id:+(new Date()),value:req.body.address}
-    addresses.push(newAddress)
+    const newAddress = addressesRepository.createProduct(req.body.address)
     res.status(201).send(newAddress)
 })
 //put
 addressesRouter.put('/:id', (req: Request, res: Response) => {
-    const address = addresses.find(p => p.id === +req.params.id)
-    if (address) {
-        address.value=req.body.value
-        res.status(201).send(address)
-    } else {
-        res.send(404)
-    }
+    const isUpdateAddress = addressesRepository.updateAddress(req.params.id, req.body.address)
+    if (isUpdateAddress) {
+        res.send(addressesRepository.getCurrentAddress(req.params.id))
+    } else res.send(404)
+
+
 })

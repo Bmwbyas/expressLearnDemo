@@ -1,6 +1,7 @@
 import {Request, Response, Router} from "express";
+import {products} from "../repositories/products-repository";
 
-const products = [{id: 1, title: 'tomato'}, {id: 2, title: 'orange'}]
+
 export const productsRoute=Router({})
 
 
