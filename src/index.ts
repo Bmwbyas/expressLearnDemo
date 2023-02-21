@@ -2,10 +2,13 @@ import express, {NextFunction, Request, Response} from 'express'
 import bodyParser from "body-parser";
 import {productsRoute} from "./routes/products-route";
 import {addressesRouter} from "./routes/addresses-routes";
-
+import {log} from "util";
+import {runDb} from "./repositories/db";
+//login:askerko50 password:64vzJmdTGUSyVKiL
 //create express app
 const app = express()
 const port = process.env.PORT || 5000
+
 
 const blablaMiddleware = ((req: Request, res: Response, next: NextFunction) => {
     // @ts-ignore
@@ -43,5 +46,6 @@ app.get('/users', (req: Request, res: Response) => {
 
 //start app
 app.listen(port, () => {
+    runDb()
     console.log(`Example app listening on port ${port}`)
 })

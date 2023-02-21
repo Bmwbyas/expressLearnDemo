@@ -1,22 +1,20 @@
 import {Request, Response, Router} from "express";
-import {products} from "../repositories/products-repository";
+import {body} from "express-validator";
+import {inputValidationMiddleware} from "../middlewares/input-validation-middleware";
+import {productsService} from "../domain/products-servise";
 
 
-export const productsRoute=Router({})
+export const productsRoute = Router({})
 
 
-//get all
-productsRoute.get('/', (req: Request, res: Response) => {
-    if (req.query.title) {
-        let searchString = req.query.title.toString()
-        res.send(products.filter(p => p.title.includes(searchString)))
-    } else {
-        res.send(products)
-    }
+//get filtred products
+productsRoute.get('/', async (req: Request, res: Response) => {
+    const result = await productsService.findproducts(req.query.title ? req.query.title.toString() : null)
+    res.send(result)
 })
-//get current product
-productsRoute.get('/:id', (req: Request, res: Response) => {
-    const product = products.find(p => p.title === req.params.productTitle)
+// get current product
+productsRoute.get('/:id', async (req: Request, res: Response) => {
+    const product = await productsService.findCurrentProduct(req.params.id ? +req.params.id : null)
     if (product) {
         res.send(product)
     } else {
@@ -24,31 +22,42 @@ productsRoute.get('/:id', (req: Request, res: Response) => {
     }
 })
 //delete
-productsRoute.delete('/:id', (req: Request, res: Response) => {
-    for (let i = 0; i < products.length; i++) {
-        if (products[i].id === +req.params.id) {
-            products.splice(i, 1)
-            res.send(204)
-            return
-        }
+productsRoute.delete('/:id', async (req: Request, res: Response) => {
+    const isDeleted = await productsService.removeProduct(+req.params.id)
+    if (isDeleted) {
+        res.status(200).send('this product deleted')
+    } else {
+        res.status(401).send('this product not found')
     }
-    res.send(404)
 })
+const titleValidation = body('title').rtrim().isLength({
+    min: 3,
+    max: 10
+}).withMessage('title length should be from 3 to 10 symbol')
+
 //post
-productsRoute.post('/', (req: Request, res: Response) => {
-    if(req.body.title){
-    const product={id:+(new Date), title:req.body.title}
-    products.push(product)
+productsRoute.post('/',
+    titleValidation,
+    inputValidationMiddleware,
+    async (req: Request, res: Response) => {
+
+        const product = await productsService.createProduct(req.body.title)
+        if (product) {
             res.send(product)
-    }
-    res.send(404)
-})
-//put
-productsRoute.put('/:id', (req: Request, res: Response) => {
-    const product=products.find(p=>p.id===+req.params.id)
-    if(product) {
-        product.title=req.body.title
-        res.send(product)
-    }
-    res.send(404)
-})
+        } else {
+            res.send(404)
+        }
+    })
+// //put
+productsRoute.put('/:id',
+    titleValidation,
+    inputValidationMiddleware,
+    async (req: Request, res: Response) => {
+
+        const isUpdate = await productsService.updateProduct(+req.params.id, req.body.title)
+        if (isUpdate) {
+            res.status(200).send( await productsService.findCurrentProduct(+req.params.id))
+        } else {
+            res.send(404)
+        }
+    })
