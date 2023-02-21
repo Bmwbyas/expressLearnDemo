@@ -1,4 +1,4 @@
-import {productsRepository, ProductType} from "../repositories/products-repository-db";
+import {productsRepository, ProductType} from "../repositories/products/products-repository-db";
 
 
 export const productsService = {

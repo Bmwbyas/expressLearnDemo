@@ -14,7 +14,7 @@ productsRoute.get('/', async (req: Request, res: Response) => {
 })
 // get current product
 productsRoute.get('/:id', async (req: Request, res: Response) => {
-    const product = await productsService.findCurrentProduct(req.params.id ? +req.params.id : null)
+    const product = await productsService.findCurrentProduct( +req.params.id)
     if (product) {
         res.send(product)
     } else {
